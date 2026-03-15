@@ -2,16 +2,12 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-
+    // For Mongoose v7+, no need for useNewUrlParser/useUnifiedTopology
     await mongoose.connect(process.env.MONGO_URI);
-
     console.log("MongoDB Connected");
-
   } catch (error) {
-
-    console.error("MongoDB connection failed");
+    console.error("MongoDB connection failed:", error.message);
     process.exit(1);
-
   }
 };
 
