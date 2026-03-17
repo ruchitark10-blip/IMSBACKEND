@@ -7,6 +7,7 @@ const connectDB = require("./config/db"); // connect to MongoDB
 const internRoutes = require("./routes/internRoutes");
 const mentorRoutes = require("./routes/mentorRoutes");
 const authRoutes = require("./routes/auth.routes");
+const taskRoutes = require("./routes/taskRoutes"); // ADDED: Import your new task router
 
 const app = express();
 
@@ -20,6 +21,7 @@ connectDB();
 // Routes with proper namespace
 app.use("/api/interns", internRoutes);
 app.use("/api/mentors", mentorRoutes);
+app.use("/api/tasks", taskRoutes); // ADDED: Register the /api/tasks route
 app.use("/auth", authRoutes);
 
 // Health check route

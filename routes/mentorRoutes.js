@@ -1,10 +1,12 @@
 const express = require("express");
 const router = express.Router();
+
+// Import controller
 const mentorController = require("../controllers/mentorController");
 
-// CRUD routes
+// Routes — pass **function references**, no parentheses
+router.post("/", mentorController.createMentor);
 router.get("/", mentorController.getMentors);
-router.post("/", mentorController.addMentor);
 router.put("/:id", mentorController.updateMentor);
 router.delete("/:id", mentorController.deleteMentor);
 

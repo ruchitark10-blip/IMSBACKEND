@@ -1,41 +1,140 @@
 const Intern = require("../models/Intern");
+const bcrypt = require("bcryptjs");
+const sendCredentialsEmail = require("../utils/sendEmail");
 
-// Create new intern
+// Generate random password
+function generatePassword(length = 10) {
+
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+
+  let password = "";
+
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return password;
+}
+
+
+// CREATE INTERN
 exports.createIntern = async (req, res) => {
+
   try {
-    const { name, email, college, department, mentor, status = "Active" } = req.body;
-    if (!name || !email || !college || !department || !mentor) {
-      return res.status(400).json({ message: "All fields are required" });
+
+    const {
+      name,
+      email,
+      college,
+      department,
+      mentor,
+      status = "Active",
+      joinedDate
+    } = req.body;
+
+    if (!name || !email || !college || !department || !mentor || !joinedDate) {
+      return res.status(400).json({
+        message: "All fields are required"
+      });
+    }
+
+    const dateObj = new Date(joinedDate);
+
+    if (dateObj.getFullYear() !== 2026) {
+      return res.status(400).json({
+        message: "Joined date must be in the year 2026"
+      });
     }
 
     const existing = await Intern.findOne({ email });
-    if (existing) return res.status(400).json({ message: "Intern with this email already exists" });
 
-    const intern = await Intern.create({ name, email, college, department, mentor, status });
-    res.status(201).json(intern);
+    if (existing) {
+      return res.status(400).json({
+        message: "Intern with this email already exists"
+      });
+    }
+
+    const plainPassword = generatePassword(10);
+
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+    const intern = await Intern.create({
+      name,
+      email,
+      college,
+      department,
+      mentor,
+      status,
+      joinedDate: dateObj,
+      password: hashedPassword
+    });
+
+    // Send email
+    await sendCredentialsEmail(email, plainPassword, "Intern");
+
+    res.status(201).json({
+      _id: intern._id,
+      name: intern.name,
+      email: intern.email,
+      college: intern.college,
+      department: intern.department,
+      mentor: intern.mentor,
+      status: intern.status,
+      joinedDate: intern.joinedDate,
+      password: plainPassword
+    });
+
   } catch (error) {
+
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+
+    res.status(500).json({
+      message: "Server error"
+    });
+
   }
 };
 
-// Get all interns
+
+
+// GET ALL INTERNS
 exports.getInterns = async (req, res) => {
+
   try {
+
     const interns = await Intern.find().sort({ createdAt: -1 });
+
     res.json(interns);
+
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server error"
+    });
+
   }
 };
 
-// Update intern
+
+
+// UPDATE INTERN
 exports.updateIntern = async (req, res) => {
+
   try {
+
     const intern = await Intern.findById(req.params.id);
-    if (!intern) return res.status(404).json({ message: "Intern not found" });
+
+    if (!intern) {
+      return res.status(404).json({
+        message: "Intern not found"
+      });
+    }
 
     const { name, email, college, department, mentor, status } = req.body;
+
     intern.name = name ?? intern.name;
     intern.email = email ?? intern.email;
     intern.college = college ?? intern.college;
@@ -44,23 +143,46 @@ exports.updateIntern = async (req, res) => {
     intern.status = status ?? intern.status;
 
     await intern.save();
+
     res.json(intern);
+
   } catch (error) {
+
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+
+    res.status(500).json({
+      message: "Server error"
+    });
+
   }
 };
 
-// Delete intern
-exports.deleteIntern = async (req, res) => {
-  try {
-    const intern = await Intern.findById(req.params.id);
-    if (!intern) return res.status(404).json({ message: "Intern not found" });
 
-    await intern.remove();
-    res.json({ message: "Intern deleted successfully" });
+
+// DELETE INTERN
+exports.deleteIntern = async (req, res) => {
+
+  try {
+
+    const intern = await Intern.findByIdAndDelete(req.params.id);
+
+    if (!intern) {
+      return res.status(404).json({
+        message: "Intern not found"
+      });
+    }
+
+    res.json({
+      message: "Intern deleted successfully"
+    });
+
   } catch (error) {
+
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+
+    res.status(500).json({
+      message: "Server error"
+    });
+
   }
 };

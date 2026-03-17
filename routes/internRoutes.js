@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 
-const { createIntern, getInterns, updateIntern, deleteIntern } = require("../controllers/internController");
+// Import controller
+const internController = require("../controllers/internController");
 
-// CRUD routes
-router.post("/", createIntern);       // POST /api/interns
-router.get("/", getInterns);         // GET /api/interns
-router.put("/:id", updateIntern);    // PUT /api/interns/:id
-router.delete("/:id", deleteIntern); // DELETE /api/interns/:id
+// Routes
+router.post("/", internController.createIntern);
+router.get("/", internController.getInterns);
+router.put("/:id", internController.updateIntern);
+router.delete("/:id", internController.deleteIntern);
 
 module.exports = router;
